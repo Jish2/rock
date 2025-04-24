@@ -4,6 +4,8 @@ class rps_bot:
     def __init__(self):
         self.regret_sum = [0.0, 0.0, 0.0]
         self.strategy_sum = [0.0, 0.0, 0.0]
+        # mapping: action -> what it beats
+        self.beats = {0: 2, 1: 0, 2: 1}
 
     def get_strategy(self):
         """
@@ -29,22 +31,24 @@ class rps_bot:
         # Regret update if not the first round
         if game_state and game_state.round > 0:
             last_move, outcome = game_state.logs[-1]
-            # infer opponent's move
+            # infer opponent's move from last outcome
             if outcome == "win":
                 opp_move = (last_move + 2) % 3
             elif outcome == "loss":
                 opp_move = (last_move + 1) % 3
             else:  # tie
                 opp_move = last_move
-            # compute counterfactual utilities
+
+            # compute counterfactual utilities correctly
             utilities = []
             for a in range(3):
                 if a == opp_move:
                     utilities.append(0)
-                elif (a + 1) % 3 == opp_move:
+                elif self.beats[a] == opp_move:
                     utilities.append(1)
                 else:
                     utilities.append(-1)
+
             actual_util = utilities[last_move]
             # update regret sums
             for i in range(3):
